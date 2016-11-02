@@ -1,0 +1,8 @@
+[
+  {
+    "cmd": "{{.GOPATH}}/src/github.com/alistanis/silentinstall/silent/test_data/wait.sh",
+    "io": [{
+      "input": "Hello! Please enter your name!", "output": "Chris"
+    }]
+  }
+]
