@@ -1,0 +1,13 @@
+[
+  {
+    "cmd": "{{.GOPATH}}/src/github.com/alistanis/silentinstall/silent/test_data/multiple_io.sh",
+    "io": [
+      {
+        "input": "Hello! Please enter your name!", "output": "Chris"
+      },
+      {
+        "input": "Please enter your age!", "output": "29"
+      }
+    ]
+  }
+]

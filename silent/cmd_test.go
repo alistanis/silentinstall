@@ -64,12 +64,27 @@ func TestSilentCmd_Exec(t *testing.T) {
 	})
 }
 
+func TestMultipleCommands(t *testing.T) {
+	Convey("We can load a config and execute multiple io ops", t, func() {
+		data, err := loadMultipleIOConfig()
+		So(err, ShouldBeNil)
+		cmds, err := NewSilentCmds(data)
+		So(err, ShouldBeNil)
+		err = cmds.Exec()
+		So(err, ShouldBeNil)
+	})
+}
+
 func loadBasicTestConfig() ([]byte, error) {
 	return loadConfig("/basic_example_config.json")
 }
 
 func loadWaitTestConfig() ([]byte, error) {
 	return loadConfig("/wait_example_config.json")
+}
+
+func loadMultipleIOConfig() ([]byte, error) {
+	return loadConfig("/multiple_io_example_config.json")
 }
 
 func loadConfig(path string) ([]byte, error) {
