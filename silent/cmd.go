@@ -18,10 +18,6 @@ var (
 	Verbose bool
 )
 
-func init() {
-	Verbose = true
-}
-
 type SilentCmd struct {
 	Cmd           *exec.Cmd
 	CmdString     string `json:"cmd"`
@@ -29,6 +25,16 @@ type SilentCmd struct {
 }
 
 type SilentCmds []*SilentCmd
+
+func (s SilentCmds) Exec() error {
+	for _, cmd := range s {
+		err := cmd.Exec()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func NewSilentCmds(configData []byte) (SilentCmds, error) {
 	cmds := SilentCmds{}

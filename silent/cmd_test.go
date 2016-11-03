@@ -15,6 +15,10 @@ const (
 	testDataPath = repoPath + "/silent/test_data"
 )
 
+func init() {
+	Verbose = true
+}
+
 func TestSilentCmd_ReadLine(t *testing.T) {
 
 	Convey("We can test the silent command's readline function", t, func() {
@@ -44,10 +48,8 @@ func TestNewSilentCmds(t *testing.T) {
 		So(err, ShouldBeNil)
 		cmds, err := NewSilentCmds(data)
 		So(err, ShouldBeNil)
-		for _, c := range cmds {
-			err := c.Exec()
-			So(err, ShouldBeNil)
-		}
+		err = cmds.Exec()
+		So(err, ShouldBeNil)
 	})
 }
 
@@ -57,10 +59,8 @@ func TestSilentCmd_Exec(t *testing.T) {
 		So(err, ShouldBeNil)
 		cmds, err := NewSilentCmds(data)
 		So(err, ShouldBeNil)
-		for _, c := range cmds {
-			err := c.Exec()
-			So(err, ShouldBeNil)
-		}
+		err = cmds.Exec()
+		So(err, ShouldBeNil)
 	})
 }
 
