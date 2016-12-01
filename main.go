@@ -4,9 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 
+	"io"
+
 	"github.com/alistanis/silentinstall/silent"
+	"github.com/alistanis/silentinstall/silent/ui"
 )
 
 const (
@@ -21,8 +25,7 @@ var (
 func init() {
 	flag.StringVar(configFile, "file", "", configVarMsg)
 	flag.BoolVar(&silent.Verbose, "v", false, verboseMsg)
-	flag.BoolVar(&silent.Verbose, "v", false, verboseMsg)
-
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 }
 
 func parseFlags() {
@@ -42,16 +45,17 @@ func main() {
 		os.Exit(-1)
 	}
 
-	cmds, err := silent.NewSilentCmds(data)
+	cmds, err := silent.NewSilentCmdsFromJSON(data)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-
+	ui := ui.NewColoredUi()
 	err = cmds.Exec()
-	if err != nil {
-		fmt.Println(err)
+	if err == io.EOF {
+		ui.Say("SilentInstall has finished successfully!")
+	} else {
+		ui.Error(err.Error())
 		os.Exit(-1)
 	}
-
 }
