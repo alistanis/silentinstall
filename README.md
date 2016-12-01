@@ -10,7 +10,15 @@ Get it: `go get -u github.com/alistanis/silentinstall`
 
 # What is this for? Doesn't everything run in Docker or have an automated install now?
 
-Unfortunately, for many of us, especially at Universities, this isn't the case. There's lots of legacy cruft lying around that's now finding its way into the cloud, and that poses problems for automation.
+Unfortunately, for many of us, especially at Universities, this isn't the case. There's lots of legacy cruft lying around that's now finding its way into the cloud, and that poses problems for automation. This is an attempt to simplify those types of application installs.
+
+This is really intended to be a supplement for something like [Packer](https://www.packer.io/)
+
+# Ok but can't we just bake an image after manually installing it?
+
+Sure you can. But if you ever need to make changes to the base image, you'll probably run into problems.
+
+In the end, if this is useful to you, awesome, and if not, well that's cool too. 
 
 # Is this a replacement for Expect?
 
