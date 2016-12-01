@@ -8,7 +8,7 @@ SilentInstall is a package that handles running your commands for you, and handl
 
 Get it: `go get -u github.com/alistanis/silentinstall`
 
-# What is this for? Isn't everything running in Docker or have an automated install now?
+# What is this for? Doesn't everything run in Docker or have an automated install now?
 
 Unfortunately, for many of us, especially at Universities, this isn't the case. There's lots of legacy cruft lying around that's now finding its way into the cloud, and that poses problems for automation.
 
