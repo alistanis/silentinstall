@@ -59,3 +59,11 @@ In order to specify a newline, just leave an empty string in "output".
         	The path of the config file
       -v	Prints verbose output if true
 ```
+
+# Running the Tests
+
+All test dependencies are included in the vendor folder. Simply cd to the source directory and run go test -v
+```
+    cd $GOPATH/src/github.com/alistanis/silentinstall/silent
+    go test -v
+```
