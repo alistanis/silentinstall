@@ -70,4 +70,4 @@ All test dependencies are included in the vendor folder. Simply cd to the source
 
 # Special Thanks
 
-The guys over at SmartyStreets for Goconvey, which I use in all my projects, jtolds for his goroutine local storage package (which I don't use but Goconvey does) https://github.com/jtolds/gls, and Mitchell Hashimoto and the guys at Hashicorp.
+The guys over at SmartyStreets for [Goconvey](http://goconvey.co/), which I use in all my projects, jtolds for his goroutine local storage package (which I don't use but Goconvey does) https://github.com/jtolds/gls, and Mitchell Hashimoto and the guys at [https://www.hashicorp.com/](Hashicorp).
