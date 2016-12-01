@@ -100,12 +100,26 @@ func (u *ColoredUi) Message(message string) {
 }
 
 func (u *ColoredUi) Error(message string) {
+	u.Err(message)
+}
+
+func (u *ColoredUi) Err(message interface{}) {
 	color := u.ErrorColor
 	if color == 0 {
 		color = UiColorRed
 	}
+	var msgString string
 
-	u.Ui.Error(u.colorize(message, color, true))
+	switch msg := message.(type) {
+	case string:
+		msgString = msg
+	case error:
+		msgString = msg.Error()
+	default:
+		panic("ui: Must pass a string or an error to Error()")
+	}
+
+	u.Ui.Error(u.colorize(msgString, color, true))
 }
 
 func (u *ColoredUi) Machine(t string, args ...string) {

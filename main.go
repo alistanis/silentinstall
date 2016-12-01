@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"github.com/alistanis/silentinstall/silent/ui"
 )
 
+// setup const messages
 const (
 	configVarMsg = "The path of the config file"
 	verboseMsg   = "Prints verbose output if true"
@@ -20,42 +20,55 @@ const (
 
 var (
 	configFile = flag.String("f", "", configVarMsg)
+	coloredUi  = ui.NewColoredUi()
 )
 
+const (
+	_ = iota // skip 0
+	// starting at -1, decrement for each additional value
+	exitNoFileProvided = -iota
+	exitBadFile
+	exitBadConfig
+	exitCmdError
+)
+
+// set our flagvars
 func init() {
 	flag.StringVar(configFile, "file", "", configVarMsg)
 	flag.BoolVar(&silent.Verbose, "v", false, verboseMsg)
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 }
 
+// parse those flags
 func parseFlags() {
 	flag.Parse()
 	if *configFile == "" {
-		fmt.Println("Must provide -f or --file for the path of the config file to use.")
-		os.Exit(-1)
+		coloredUi.Err("Must provide -f or --file for the path of the config file to use.")
+		os.Exit(exitNoFileProvided)
 	}
 }
 
 func main() {
 	parseFlags()
-
+	// read config data
 	data, err := ioutil.ReadFile(*configFile)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
+		coloredUi.Err(err)
+		os.Exit(exitBadFile)
 	}
 
+	// convert json to list of commands
 	cmds, err := silent.NewSilentCmdsFromJSON(data)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
+		coloredUi.Err(err)
+		os.Exit(exitBadConfig)
 	}
-	ui := ui.NewColoredUi()
+	// execute them!
 	err = cmds.Exec()
 	if err == io.EOF {
-		ui.Say("SilentInstall has finished successfully!")
+		coloredUi.Say("SilentInstall has finished successfully!")
 	} else {
-		ui.Error(err.Error())
-		os.Exit(-1)
+		coloredUi.Err(err)
+		os.Exit(exitCmdError)
 	}
 }
