@@ -36,12 +36,14 @@ const (
 func init() {
 	flag.StringVar(configFile, "file", "", configVarMsg)
 	flag.BoolVar(&silent.Verbose, "v", false, verboseMsg)
-	log.SetFlags(log.Lshortfile | log.LstdFlags)
 }
 
 // parse those flags
 func parseFlags() {
 	flag.Parse()
+	if silent.Verbose {
+		log.SetFlags(log.Lshortfile | log.LstdFlags)
+	}
 	if *configFile == "" {
 		coloredUi.Err("Must provide -f or --file for the path of the config file to use.")
 		os.Exit(exitNoFileProvided)
