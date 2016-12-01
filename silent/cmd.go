@@ -114,6 +114,7 @@ func (s *SilentCmd) Exec() error {
 		return errors.New("s.Cmd must not be nil")
 	}
 
+	// get stdin, stdout, and stderr
 	i, err := s.Cmd.StdinPipe()
 	if err != nil {
 		return err
@@ -232,7 +233,7 @@ func (s *SilentCmd) Match(bufferString string) (bool, *IO) {
 	ioReturn := &IO{}
 	index := 0
 	for i, inputOutput := range s.ExpectedCases {
-		// super naive check - thinking about fuzzy matching here but open to ideas
+		// naive check - thinking about fuzzy matching here but open to ideas. Maybe just check for the exact length of what's expected? Don't want to get caught on possible extra white space though.
 		if strings.Contains(bufferString, inputOutput.Input) {
 			match = true
 			ioReturn = inputOutput
