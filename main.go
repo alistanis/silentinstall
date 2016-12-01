@@ -8,6 +8,8 @@ import (
 
 	"io"
 
+	"path/filepath"
+
 	"github.com/alistanis/silentinstall/silent"
 	"github.com/alistanis/silentinstall/silent/ui"
 )
@@ -52,8 +54,10 @@ func parseFlags() {
 
 func main() {
 	parseFlags()
+
+	file := filepath.Clean(*configFile)
 	// read config data
-	data, err := ioutil.ReadFile(*configFile)
+	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		coloredUi.Err(err)
 		os.Exit(exitBadFile)

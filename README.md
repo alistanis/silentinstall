@@ -2,7 +2,7 @@
 
 Expect - but simpler! [Linux Expect Man Page](https://linux.die.net/man/1/expect)
 
-Ever wanted to automate installing loud linux/unix packages or scripts easily? Now you can. Hell, it might even work for Windows, but I haven't tried.
+Ever wanted to automate installing loud linux/unix packages or scripts easily? Now you can. Hell, it might even work for Windows, but I haven't tried. If you'd like to try it with the built in examples, you'll need to change the paths in the example files to something Windows supports. (C:\Path\To\File.json)
 
 SilentInstall is a package that handles running your commands for you, and handles their expected inputs/outputs in a way you define.
 
