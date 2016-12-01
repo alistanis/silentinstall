@@ -6,7 +6,8 @@ Ever wanted to automate installing loud linux/unix packages or scripts easily? N
 
 SilentInstall is a package that handles running your commands for you, and handles their expected inputs/outputs in a way you define.
 
-Get it: `go get -u github.com/alistanis/silentinstall`
+# Get it
+`go get -u github.com/alistanis/silentinstall`
 
 # What is this for? Doesn't everything run in Docker or have an automated install now?
 
