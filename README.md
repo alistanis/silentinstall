@@ -35,7 +35,7 @@ In order to specify a newline, just leave an empty string in "output".
     [
       {
         "cmd": "{{.GOPATH}}/src/github.com/alistanis/silentinstall/silent/test_data/multiple_io.sh",
-        "io": [
+        "expectations": [
           {
             "input": "Hello! Please enter your name!", "output": "Chris"
           },

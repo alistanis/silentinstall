@@ -24,8 +24,8 @@ var (
 // this can be a regular command or it can be one that expects input from the user
 type SilentCmd struct {
 	Cmd           *exec.Cmd
-	CmdString     string `json:"cmd"`
-	ExpectedCases []*IO  `json:"io"`
+	CmdString     string         `json:"cmd"`
+	ExpectedCases []*Expectation `json:"expectations"`
 	ReceiveBuffer *bytes.Buffer
 	ReadChan      chan string
 	ErrChan       chan error
@@ -102,8 +102,8 @@ func NewSilentCmdsFromJSON(configData []byte) (SilentCmds, error) {
 	return cmds, nil
 }
 
-// IO is an input/output structure that stores expected input and output
-type IO struct {
+// Expectation is a structure that stores expected input and output coming from another application
+type Expectation struct {
 	Input  string `json:"input"`
 	Output string `json:"output"`
 }
@@ -209,6 +209,7 @@ func (s *SilentCmd) Receive(w io.Writer) error {
 		select {
 		case str := <-s.ReadChan:
 			if Verbose {
+				// gives more specific info for debugging
 				log.Println(str)
 			}
 			s.coloredUI.Say(str)
@@ -228,15 +229,17 @@ func (s *SilentCmd) Receive(w io.Writer) error {
 }
 
 // Match checks the buffer string against expected cases, removing from the list when one is found
-func (s *SilentCmd) Match(bufferString string) (bool, *IO) {
+func (s *SilentCmd) Match(bufferString string) (bool, *Expectation) {
 	match := false
-	ioReturn := &IO{}
+	expectation := &Expectation{}
 	index := 0
-	for i, inputOutput := range s.ExpectedCases {
-		// naive check - thinking about fuzzy matching here but open to ideas. Maybe just check for the exact length of what's expected? Don't want to get caught on possible extra white space though.
-		if strings.Contains(bufferString, inputOutput.Input) {
+	for i, e := range s.ExpectedCases {
+		// naive check - thinking about fuzzy matching here but open to ideas.
+		// Maybe just check for the exact length of what's expected?
+		// Don't want to get caught on possible extra white space though.
+		if strings.Contains(bufferString, e.Input) {
 			match = true
-			ioReturn = inputOutput
+			expectation = e
 			index = i
 		}
 	}
@@ -246,5 +249,5 @@ func (s *SilentCmd) Match(bufferString string) (bool, *IO) {
 		s.ExpectedCases[index] = nil
 		s.ExpectedCases = append(s.ExpectedCases[:index], s.ExpectedCases[index+1:]...)
 	}
-	return match, ioReturn
+	return match, expectation
 }
