@@ -25,12 +25,18 @@ var (
 type SilentCmd struct {
 	Cmd           *exec.Cmd
 	CmdString     string         `json:"cmd"`
-	ExpectedCases []*Expectation `json:"expectations"`
+	Expectations  []*Expectation `json:"expectations"`
 	ReceiveBuffer *bytes.Buffer
 	ReadChan      chan string
 	ErrChan       chan error
 	ErrStringChan chan string
 	coloredUI     ui.Ui
+}
+
+// Expectation is a structure that stores expected input and output coming from another application
+type Expectation struct {
+	Input  string `json:"input"`
+	Output string `json:"output"`
 }
 
 // NewSilentCmd returns a new SilentCmd with all of its fields initialized (except expected cases)
@@ -71,24 +77,14 @@ func NewSilentCmdsFromJSON(configData []byte) (SilentCmds, error) {
 		envMap[kv[0]] = kv[1]
 	}
 	for _, c := range cmds {
-		// because we've loaded from json we have to initialize these on their own here
-		c.ReceiveBuffer = bytes.NewBuffer([]byte{})
-		c.ReadChan = make(chan string)
-		c.ErrChan = make(chan error)
-		c.ErrStringChan = make(chan string)
-		c.coloredUI = ui.NewColoredUi()
-		t, err := template.New("envBuilder").Parse(c.CmdString)
-		if err == nil {
-			w := bytes.NewBuffer([]byte{})
-			err = t.Execute(w, envMap)
-			if err != nil {
-				return nil, err
-			}
-			c.CmdString = w.String()
+		// because we've loaded from json we have to initialize the command's nil fields here
+		c.Init()
+		err = c.ExecTemplate(envMap)
+		if err != nil {
+			return nil, err
 		}
 		// naive but done for speed of dev
 		args := strings.Split(c.CmdString, " ")
-		fmt.Println(args)
 		if len(args) > 1 {
 			fmt.Println("printing args")
 			fmt.Println(args)
@@ -102,10 +98,27 @@ func NewSilentCmdsFromJSON(configData []byte) (SilentCmds, error) {
 	return cmds, nil
 }
 
-// Expectation is a structure that stores expected input and output coming from another application
-type Expectation struct {
-	Input  string `json:"input"`
-	Output string `json:"output"`
+// Init initializes this command's nil fields
+func (s *SilentCmd) Init() {
+	s.ReceiveBuffer = bytes.NewBuffer([]byte{})
+	s.ReadChan = make(chan string)
+	s.ErrChan = make(chan error)
+	s.ErrStringChan = make(chan string)
+	s.coloredUI = ui.NewColoredUi()
+}
+
+// ExecTemplate parses a map replacing templated values in the command string
+func (s *SilentCmd) ExecTemplate(m map[string]string) error {
+	t, err := template.New("envBuilder").Parse(s.CmdString)
+	if err == nil {
+		w := bytes.NewBuffer([]byte{})
+		err = t.Execute(w, m)
+		if err != nil {
+			return err
+		}
+		s.CmdString = w.String()
+	}
+	return nil
 }
 
 // Exec executes this SilentCmd, blocking until EOF
@@ -154,7 +167,7 @@ func (s *SilentCmd) Exec() error {
 	}()
 
 	go func() {
-		s.ReadToChannel(e, s.ErrStringChan)
+		s.ReadErr(e)
 	}()
 
 	return s.Receive(i)
@@ -170,7 +183,7 @@ func (s *SilentCmd) ReadLine(reader io.Reader) (string, error) {
 	return strings.Replace(l, "\r", "", -1), err
 }
 
-// Writes l (line) to the provided writer, returning an error if any
+// Write writes l (line) to the provided writer, returning an error if any
 func (s *SilentCmd) Write(l string, writer io.Writer) error {
 	if !strings.HasSuffix(l, "\n") {
 		l = l + "\n"
@@ -179,9 +192,14 @@ func (s *SilentCmd) Write(l string, writer io.Writer) error {
 	return err
 }
 
-// Reads data from reader into s.ReadChan
+// Read reads data from reader into s.ReadChan
 func (s *SilentCmd) Read(reader io.Reader) {
 	s.ReadToChannel(reader, s.ReadChan)
+}
+
+// ReadErr reads data from reader into s.ErrStringChan
+func (s *SilentCmd) ReadErr(reader io.Reader) {
+	s.ReadToChannel(reader, s.ErrStringChan)
 }
 
 // ReadToChannel reads from reader to the channel ch
@@ -215,9 +233,9 @@ func (s *SilentCmd) Receive(w io.Writer) error {
 			s.coloredUI.Say(str)
 			s.ReceiveBuffer.WriteString(str)
 
-			match, inputOutput := s.Match(s.ReceiveBuffer.String())
+			match, expected := s.Match(s.ReceiveBuffer.String())
 			if match {
-				s.Write(inputOutput.Output, w)
+				s.Write(expected.Output, w)
 				s.ReceiveBuffer.Reset()
 			}
 		case err := <-s.ErrChan:
@@ -233,7 +251,7 @@ func (s *SilentCmd) Match(bufferString string) (bool, *Expectation) {
 	match := false
 	expectation := &Expectation{}
 	index := 0
-	for i, e := range s.ExpectedCases {
+	for i, e := range s.Expectations {
 		// naive check - thinking about fuzzy matching here but open to ideas.
 		// Maybe just check for the exact length of what's expected?
 		// Don't want to get caught on possible extra white space though.
@@ -246,8 +264,8 @@ func (s *SilentCmd) Match(bufferString string) (bool, *Expectation) {
 
 	if match {
 		// pop off so we don't hit duplicates
-		s.ExpectedCases[index] = nil
-		s.ExpectedCases = append(s.ExpectedCases[:index], s.ExpectedCases[index+1:]...)
+		s.Expectations[index] = nil
+		s.Expectations = append(s.Expectations[:index], s.Expectations[index+1:]...)
 	}
 	return match, expectation
 }
