@@ -33,7 +33,7 @@ type SilentCmd struct {
 	coloredUI     ui.Ui
 }
 
-// Expectation is a structure that stores expected input and output coming from another application
+// Expectation is a structure that stores expected input and output coming from and to another application
 type Expectation struct {
 	Input  string `json:"input"`
 	Output string `json:"output"`
