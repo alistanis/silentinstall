@@ -27,18 +27,6 @@ func init() {
 	Verbose = true
 }
 
-func TestSilentCmd_ReadLine(t *testing.T) {
-
-	Convey("We can test the silent command's readline function", t, func() {
-		s := &SilentCmd{}
-		reader := bytes.NewReader([]byte("Hello!\n"))
-		l, err := s.ReadLine(reader)
-		So(err, ShouldBeNil)
-		So(l, ShouldEqual, "Hello!\n")
-	})
-
-}
-
 func TestSilentCmd_Read(t *testing.T) {
 	Convey("We can test the silent command's read function", t, func() {
 		s := NewSilentCmd()

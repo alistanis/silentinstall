@@ -1,7 +1,6 @@
 package silent
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -121,38 +120,35 @@ func (s *SilentCmd) ExecTemplate(m map[string]string) error {
 	return nil
 }
 
+// Pipes returns stdin, stdout, and stderr of this command
+func (s *SilentCmd) Pipes() (i io.WriteCloser, o io.ReadCloser, e io.ReadCloser, err error) {
+	if i, err = s.Cmd.StdinPipe(); err != nil {
+		return
+	}
+
+	if o, err = s.Cmd.StdoutPipe(); err != nil {
+		return
+	}
+
+	e, err = s.Cmd.StderrPipe()
+	return
+}
+
 // Exec executes this SilentCmd, blocking until EOF
 func (s *SilentCmd) Exec() error {
 	if s.Cmd == nil {
 		return errors.New("s.Cmd must not be nil")
 	}
 
-	// get stdin, stdout, and stderr
-	i, err := s.Cmd.StdinPipe()
+	i, o, e, err := s.Pipes()
 	if err != nil {
 		return err
 	}
 
-	o, err := s.Cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	e, err := s.Cmd.StderrPipe()
-	if err != nil {
-		return err
-	}
-
-	closeFunc := func() error {
-		err := i.Close()
-		if err != nil {
-			return err
-		}
-		err = o.Close()
-		if err != nil {
-			return err
-		}
-		return e.Close()
+	closeFunc := func() {
+		i.Close()
+		o.Close()
+		e.Close()
 	}
 
 	defer closeFunc()
@@ -171,16 +167,6 @@ func (s *SilentCmd) Exec() error {
 	}()
 
 	return s.Receive(i)
-}
-
-// ReadLine - Deprecated - Reads lines of input from the reader returning a string and error
-func (s *SilentCmd) ReadLine(reader io.Reader) (string, error) {
-	// read for newline character
-	r := bufio.NewReader(reader)
-
-	l, err := r.ReadString('\n')
-	// eliminate any pesky \r's because windows
-	return strings.Replace(l, "\r", "", -1), err
 }
 
 // Write writes l (line) to the provided writer, returning an error if any
@@ -247,25 +233,15 @@ func (s *SilentCmd) Receive(w io.Writer) error {
 }
 
 // Match checks the buffer string against expected cases, removing from the list when one is found
-func (s *SilentCmd) Match(bufferString string) (bool, *Expectation) {
-	match := false
-	expectation := &Expectation{}
-	index := 0
+func (s *SilentCmd) Match(bufferString string) (match bool, expectation *Expectation) {
 	for i, e := range s.Expectations {
 		// naive check - thinking about fuzzy matching here but open to ideas.
 		// Maybe just check for the exact length of what's expected?
 		// Don't want to get caught on possible extra white space though.
 		if strings.Contains(bufferString, e.Input) {
-			match = true
-			expectation = e
-			index = i
+			s.Expectations = append(s.Expectations[:i], s.Expectations[i+1:]...)
+			return true, e
 		}
 	}
-
-	if match {
-		// pop off so we don't hit duplicates
-		s.Expectations[index] = nil
-		s.Expectations = append(s.Expectations[:index], s.Expectations[index+1:]...)
-	}
-	return match, expectation
+	return
 }
